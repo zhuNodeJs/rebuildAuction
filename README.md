@@ -15,4 +15,7 @@
 ,
 "scripts":["../node_modules/bootstrap/dist/js/bootstrap.js"]
 ```
-三。
+三。属性绑定：
+1. html标签的属性和控制器上的属性绑定在一起。
+2. 样式绑定： [class.glyphicon-star-empty]='star';
+四：
