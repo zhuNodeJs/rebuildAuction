@@ -102,4 +102,130 @@ imports: {
 ```
 七. 当一个类implements继承另一个类时， 需要实现另一个类的方法。
 八. @Injectable(); 的作用是决定其他的服务是否能注入进来(通过constructor);如果想要将一个服务注入到其他的服务，则要将这个服务添加到提供器中(providers).
-九. 
+九. 数据绑定(是单向的)
+<input (input)='onInputEvent($event)'> $event是一个浏览器事件对象，右侧也可以是一个表达式。可以是一个标准的dom事件，也可以是自定义的事件。
+插值表达式和属性绑定是相同的。angular会把插值表达式解释成为属性绑定。
+
+html属性和DOM属性的区别？
+
+input中的event.target.value是dom属性，html属性是保持不变的(event.target.getAttribute('value'))，其在dom节点创建时初始化。
+html初始化dom属性，然后它的任务就完成了。dom的值可以改变，html的值不能改变。
+button的disable属性。当这个属性出现的时候，由于html初始化他的值初始化为true，所以只要这个属性一出现，则button即被禁用。即使disabled='false'，按钮也是不可使用的， 即无法通过设置html属性的值来禁用按钮，但是可以通过设置dom属性的值，来控制按钮是否可用, [disable]='false'，按钮可用。
+1. 少量的HTML属性和DOM属性之间有着1:1的映射,例如：id.
+2. 有些HTML属性没有对应的DOM属性，如colspan.
+3. 有些dom属性没有对应的HTML属性，如：textContent.
+4. 就算名字相同，但HTML属性和DOM属性也不是一样东西。
+5. HTML属性的值指定了初始值，DOM属性表示当前值，DOM属性的值可以改变，但是HTML属性的值不能改变。
+6. angular的模板绑定是通过DOM属性和事件来工作的，而不是HTML属性,插值表达式是DOM属性绑定。
+
+HTML属性绑定
+1. 基本的Html属性绑定 <td [attr.colspan]='tableColspan'>Something</td>
+2. css类绑定 <div class='aaa bb' [class]='someExpression'>something</div>,
+<div [class.isSpecial]='isSpecial'>Something</div>,
+<div [ngClass]='{aaa: isA, bbb: isB}'></div>
+3. 样式绑定 <button [style.color]='isSpecial ?  "red": "green"'></button>,
+<div [style.font-size.em]='isDev'? 1 : 3></div> 单一样式的好方法,
+<div [ngStyle]='{"font-style": this.canSave ? "italic": "normal"}'></div>
+十：管道
+{{birthday | date | uppercase | lowercase}}
+date: 'yyyy-MM-dd HH:mm:ss' 格式化时间参数
+{{pi | number: '2.2-2'}} // 点后面的数字是代表小数点后的最小的位数，最大的位数
+{{data | async}} 服务器通信时使用，处理异步流
+
+自定义管道：#ng g pipe pipe/multipe
+```
+export class MultiplePipe implements PipeTransform {
+    transform(value: number,arg?: number): any { // value代表的是输入的值
+        if (!args) {
+            args = 1;
+        }
+        return value * arg;
+    }
+}
+```
+
+十一：响应式编程(需要在主模块中引入ReactiveFormsModule)
+步骤：
+1. <input class='form-control' placeholder='请输入商品名称' [formControl]='titleFilter'> // 将formControl属性和titleFilter联系起来, 然后在input的value变化时触发valueChanges的数据流，然后在construtor构造函数中订阅这个数据流即可。
+2. private titleFilter: FormControl = new FormControl(); 
+3. 
+private keyword: string;
+constructor() {
+    this.titleFilter.valueChanges
+        .debounceTime(500)
+        .subscribe((value) => {
+            this.keyword = value;
+        })
+}
+4. import 'rxjs/Rx';
+5. 
+```
+<div class='col-md-4 col-sm-4 col-lg-4' *ngFor="let item of products | filter:'title':keyword"></div>
+当keyword实时的改变时，products的结果也就是根据keyword, title也是实时的改变。
+``` 
+十二： 组件的通讯(松耦合低内聚)
+子组件发送事件：（EventEmitter的参数需要泛型，是发送的数据类型）
+1. private lastPrice:EventEmitter<PriceQuote> = new EventEmitter();
+this.lastPrice.emit(priceQuote);
+2. 父组件接受：
+<app-price-quote (lastPrice)='priceQuoteHandle($event)'></app-price-quote>
+3. @Output('发射的事件的名字'),在父组件中()中引用。
+十三：中间人模式
+中间人模式就是寻找子组件们共同的父组件，最顶级的中间人是根组件，即AppComponent.
+十四: ngOnChanges钩子
+```
+ngOnChanges(changes: SimpleChanges): void {
+  let name = changes['name'].currentValue;
+}
+```
+constructor和ngOnInit的区别：
+1. 当本组件中存在输入属性时，输入属性的值的初始化是在ngOnChanges中完成，所以在constructor中的输出得到的值是
+空值，因此可以在ngOnInit中进行输入属性的值的取值的操作而不应该在constructor中对值进行操作。
+十五： ngOnChanges
+不可变对象：内存地址在被创建之后不再改变，值类型对象，创建的每一个对象都是不可变的，例如：var greeting = 'hello'; greeting = 'world'; 这是创建了两个对象.
+可变对象：var user = {name: 'Tom'};user.name = 'Jerry';改动的对象的内容，内存地址没有变。
+注意：
+ 1. 当父组件的传入的对象是可变对象，所以当父组件的传递的对象的属性发生变化时，并不能触发子组件的ngOnChange钩子，
+ 但是由于angular有动态监测机制，所以当父组件的对象的属性发生变化，子组件的仍然可以显示在页面上。
+ 2. 对于不可变对象：值类型的数据，当对变量进行进行重新赋值时，改变的值变量的内存对象，即变量的内存的地址也跟着改变。
+      对于可变对象：对象类型的数据，当改变变量属性的内容时，变量的内存地址没有发生改变，只是内容发生改变。
+ 3. 只有是输入属性的变化时，才会触发ngOnChanges钩子。变更检测机制还是会检测每一个对象的属性的值的变化。
+十六：变更检测机制
+所有的异步的变化都会触发变更检测机制，分为default和OnPush两种。是由zone.js控制的。当某个组件的变更检测策略为OnPush，则只有它的输入属性发生变化时，才会触发这个组件和这个组件的子组件的变更检测策略。default策略的检查都是从根组件开始。变更检测机制的实现是由ngDoCheck来实现的。
+十七：父组件中调用子组件中的代码
+1. 方法一：
+```
+// 子组件中的方法
+greeting(name: string) {
+    console.log('hello'+name);
+  }
+
+  <!-- 父组件的获取子组件的方法 -->
+  <app-footer #child1></app-footer>
+
+  // 调用子组件的方法
+  @ViewChild('child1')
+  child1: FooterComponent;
+
+  ngOnInit() {
+    this.child1.greeting('tom');
+  }
+```
+2. 方法二：
+```
+// 子组件中的方法
+greeting(name: string) {
+    console.log('hello'+name);
+  }
+
+ <app-footer #child2></app-footer>
+<button (click)='child2.greeting("Jerry")'>点击调取子组件的方法</button> 
+```
+十八：变更检测周期，在视图的view组合之中不可添加组件的属性的改变，如果要使用的话，可以使用setTimeout();中即可。
+十九: 
+      
+
+
+
+
+
