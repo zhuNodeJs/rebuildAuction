@@ -287,9 +287,52 @@ greeting(name: string) {
   let sum = this.comments.reduce((sum, comment) => sum + comment.rating, 0);    
 ``` 
   解析：求和，0表示的是sum的初始值。
-二十四：
-  
+#### 二十四：表单(模板式表单, 响应式表单)
+ 一,
+  1. 模板式表单：表单的数据类型是通过组件模板中的相关的指令来完成的，但是受限于HTML语法，所以，模板驱动方式只适用于一些简单的场景。 
+  2.  响应式表单：通过TS来创建一个底层的数据模型，然后使用特定的指令，将模板上的html和底层的数据模型连接在一起。
+  注： 不管是哪种表单，都有一个对应的数据模型来存储表单的数据。在模板表单中，数据模型是由angular基于你组件中的指令隐式创建的，而响应式表单是数据模型是由自己创建的。
+数据模型并不是任意的对象，它是一个由angular/forms模块中的一些特定的类：FormControl, FormGroup, FormArray组成，在模板表单中不能直接的访问，而在响应式表单中要直接的使用操作。
+  3. 如果不希望angular自动处理你的表单，使用指令ngNoForm指令。
+  4. 使用在form标签中添加<form #myForm='ngForm'></form>, 此时可以通过myForm变量来引用这个form表单, 如获取值myForm.value来得到提交的值对象。
+  5. 原生的html的方法都会失效。
+  6. 模板表单指令：NgForm(代表整个表单), NgModel(进行数据的双向的绑定), NgModelGroup(进行的是同一类的分组)
+  7. 也可以在div添加NgForm来实现表单的相同的功能。
+  8. 模板本地变量#userName='ngModel', 可以引用input，通过userName.value来调取值，引用值。
+  9. NgModelGroup --> FormGroup
 
+ 二, 响应式表单(需引入模块imports: [ReactiveFormsModule]) 
+  1. 创建数据模型(FormControl--当前值和元素状态, FormGroup, FormsArray)
+  2. 将模板和数据模型连接起来
+  FormGroup和FormArray的区别：
+  1. 可以代表一个表单，也可以是一部分，是FormControl的集合，校验时，有一个失效时，整个group失效。
+  2. FormArray有长度属性，长度可以增加。没有key值，通过下标来调用。
+  3. 
+  
+三, git的实战操作
+  1. 配置只适合当前的目录的git配置命令(添加local属性, 只对当前目录有效)：
+  ```
+  #git config user.name 'kungfu' --local
+  #git config user.email 'xxx@163.com' --local
+  ```
+  2. 配置别名：
+  ```
+  #git config --global alias.st status
+  #git config --global alias.ps push
+  #git config --global alias.pl pull
+  #git config --global alias.ck checkout
+  #git config --global alias.mg merge
+  ```
+  3. 查看分支：#git branch
+  4. 添加远程库：#git remote add origin git仓库地址 #git remote -v (查看从哪个仓库进行fetch,push) #git push origin -u master
+  5. 创建分支： #git branch newBranch, 切换创建， 进入分支：#git ck dev
+  6. 
+  ```
+  #git merge master; 合并分支
+  推送到远程的dev:#git push origin dev
+  ```
+  7. 删除一个分支：#git branch -d 分支名， 远端的分支的删除：#git push origin -d 模块名
+  8. 
 
 
 
