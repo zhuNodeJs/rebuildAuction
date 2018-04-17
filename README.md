@@ -101,6 +101,7 @@ imports: {
 
 ```
 七. 当一个类implements继承另一个类时， 需要实现另一个类的方法。
+
 八. @Injectable(); 的作用是决定其他的服务是否能注入进来(通过constructor);如果想要将一个服务注入到其他的服务，则要将这个服务添加到提供器中(providers).
 九. 数据绑定(是单向的)
 <input (input)='onInputEvent($event)'> $event是一个浏览器事件对象，右侧也可以是一个表达式。可以是一个标准的dom事件，也可以是自定义的事件。
@@ -157,7 +158,9 @@ constructor() {
             this.keyword = value;
         })
 }
+
 4. import 'rxjs/Rx';
+
 5. 
 ```
 <div class='col-md-4 col-sm-4 col-lg-4' *ngFor="let item of products | filter:'title':keyword"></div>
@@ -190,8 +193,10 @@ constructor和ngOnInit的区别：
  2. 对于不可变对象：值类型的数据，当对变量进行进行重新赋值时，改变的值变量的内存对象，即变量的内存的地址也跟着改变。
       对于可变对象：对象类型的数据，当改变变量属性的内容时，变量的内存地址没有发生改变，只是内容发生改变。
  3. 只有是输入属性的变化时，才会触发ngOnChanges钩子。变更检测机制还是会检测每一个对象的属性的值的变化。
+
 十六：变更检测机制
-所有的异步的变化都会触发变更检测机制，分为default和OnPush两种。是由zone.js控制的。当某个组件的变更检测策略为OnPush，则只有它的输入属性发生变化时，才会触发这个组件和这个组件的子组件的变更检测策略。default策略的检查都是从根组件开始。变更检测机制的实现是由ngDoCheck来实现的。
+所有的**异步的操作**都会触发变更检测机制，分为default和OnPush两种。是由zone.js控制的。当某个组件的变更检测策略为OnPush，则只有它的输入属性发生变化时，才会触发这个组件和这个组件的子组件的变更检测策略。default策略的检查都是从根组件开始。变更检测机制的实现是由ngDoCheck来实现的。
+
 十七：父组件中调用子组件中的代码
 1. 方法一：
 ```
@@ -221,9 +226,69 @@ greeting(name: string) {
  <app-footer #child2></app-footer>
 <button (click)='child2.greeting("Jerry")'>点击调取子组件的方法</button> 
 ```
-十八：变更检测周期，在视图的view组合之中不可添加组件的属性的改变，如果要使用的话，可以使用setTimeout();中即可。
-十九: 
-      
+十八：变更检测周期，在视图的view组合之中不可改变组件的属性的操作，如果要使用的话，可以使用setTimeout();中即可。
+
+十九:  ngAfterViewInit和ngAfterViewChecked (视图内容和视图变更检测)
+- 初始化的方法会在变更检测方法前面被调用，都是在视图组件组装完毕之后被调用。
+- 不要在这两个方法中试图去改变视图中绑定的东西，如果想要改变也要写在一个setTimeout里边，让其在Javascript中的另一个运行周期中去运行。
+- 初始化的方法都只是调用一次
+- 如果有子组件，会先组装完子组件然后在组装父组件
+- 如果想实现ngAfterViewChecked这个钩子，方法一定要非常高效，非常的轻量级，不然会引发性能的问题
+- 在这两个接口中，改变的属性一定要在模板上显示才会爆出错误，如果爆出错误，建议使用setTimeout解决，另外，不建议在这两个是实现接口的函数中改变模板的值。
+- 数据改变和视图检测是在一起的。
+
+二十：投影：即将父组件的任意一个片段投影到子组件上。
+  1. 使用<ng-content></ng-content>标记一个投影点      
+  2. 父组件中的设置：将要投影到子组件的html片段放置在selector上，即例如：<app-child>
+  <div>这个div师傅组件投影到子组件中</div>
+  </app-child>
+  3. 如果在一个模板上有多个投影点，则可以使用class类名进行区分，在父组件中，设置要投影的片段的类，然后在子组件中，在放置投影的片段的<ng-content>上添加select='.类名';例：
+  <ng-content selector='.header'></ng-content>, 传递的内容是解析过的，可以在传递的内容中添加**差值表达式**，插值表达式只能使用父组件的属性，而不能使用子组件中的属性。
+  4. 在<div [innerHTML]='divContent'></div>, ts中divContent = '<div>插入</div>';
+  也可以将html片段插入到字段中。存在浏览器依赖。
+
+二十一：ngAfterContentInit ngAfterContentChecked (可以改变属性内容，而不会报错, 可以在钩子中添加改变属性的方法)
+
+  是被投影的内容组装完成后，进行调用的。父组件向子组件进行的投影的初始化和变更检测。先投影(父 -> 子), 在视图内容组装( 子 -> 父).
+  
+  ngOnInit: 初始化除输入属性的初始化。
+  ngOnDestroy: 路由跳转的时候，前一个路由会被销毁。
+
+二十二：
+```  
+  <app-stars [(rating)]='newRating' [readonly]='false'></app-stars>
+  <!-- 解析 -->
+  [(rating)]='newRating'; 
+  将rating 和 newRating两个变量联系起来，实现两者的互相的调动。其中一个值的变化会导致另一个值的变化；
+  从父组件到子组件的数据的传递采用的是属性的绑定，而由子组件到父组件的采用的是事件的发射(EventEmitter其中需要一个泛型), 其中的事件的发射的写法：
+  @Output()
+  private ratingChange: EventEmitter<number> = new EventEmitter();
+  其中的ratingChange是一个固定的写法，只有这样写，才能在app-stars上的实现[(rating)]的绑定，将属性值的传入和事件的接收的放在一起。其中的readonly属性是作为一个属性的传入属性存在的。是接收父组件的值。
+  其中星星的实现：
+  <p>
+    <span *ngFor="let star of stars; let i = index;" class="glyphicon glyphicon-star"  [class.glyphicon-star-empty]='star' (click)='clickStar(i)'>
+    </span>
+    <span>{{rating}}星</span>
+  </p>
+```
+注意：由于星星的个数采用的输入的值，所有星星的绘制操作，要放在ngOnChanges钩子中来实现，当星星的个数发生变化时，会触发变更的检测。
+```
+// 当输入属性发生变化，则触发ngOnChanges函数;
+  ngOnChanges(changes: SimpleChanges): void {
+      this.stars = [];
+      for( var i = 1; i <= 5; i++) {
+        this.stars.push(i > this.rating);
+      }
+  }
+```
+二十三： 
+```
+  // 求星星的平均值
+  let sum = this.comments.reduce((sum, comment) => sum + comment.rating, 0);    
+``` 
+  解析：求和，0表示的是sum的初始值。
+二十四：
+  
 
 
 
