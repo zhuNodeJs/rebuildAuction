@@ -465,10 +465,11 @@ greeting(name: string) {
             this.mobileValid = form.form.get('mobile').valid;
         }
     }
+    
     <!-- 然后在变量属性绑定到模板上。 -->
     <div [hidden]='mobileValid'></div>
     ```
-    
+
    
 
 三, git的实战操作
