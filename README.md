@@ -307,8 +307,170 @@ greeting(name: string) {
   FormGroup和FormArray的区别：
   1. 可以代表一个表单，也可以是一部分，是FormControl的集合，校验时，有一个失效时，整个group失效。
   2. FormArray有长度属性，长度可以增加。没有key值，通过下标来调用。
-  3. 
-  
+  3. 在form中添加[formGroup]='变量名';变量名在ts中的定义。
+  4. 数据模型要和页面的模型都是一致的，一一对应的。
+  5. 
+  ```
+  <!-- li是和(<li *ngFor="let e of this.formModel.get('emails').controls;let i = index;">)中的controls联系在一起，所以只需要在controls数组中添加一个control,则会导致输入框的增加。 -->
+  addEmail() {
+    let emails = this.formModel.get('emails') as FormArray;
+    emails.push(new FormControl())
+  }
+  ```
+  6. formControlName指令只能用在FormGroup的范围之内。
+  7. FormBuilder可以来简化响应式表单的创建过程：其中在constructor中注入服务,private fb: FormBuilder, 其中new FormsControl() 可以使用['']来进行简化.
+  ['',xx,yy],在其中可以添加三个参数，第一个参数表示的是初始值, 第二个参数是表示同步校验,第三个参数表示异步校验。
+  ```
+  // fb来书写响应式表单
+    this.formModel = fb.group({
+      userName: [''],
+      phoneNumber: [''],
+      passwordArray: fb.group({
+        pwd: [''],
+        pwdAgain: ['']
+      })
+    }, {});
+    <!-- 后面的添加的{}, 也是用来校验的 -->
+  ```
+   8. 表单的校验：
+    校验器：一个普通的方法，方法名自定义, 
+    xxx(control: AbstractControl): {[key:string]: any} {
+        // Validators中存在很多常用的校验器。
+        return null; // 其返回值的格式是：当返回的是true时，返回null，当校验结果为false, 返回对象{key: true}(其中key是一个字符串)
+    }
+    AbstractControl可以是FormControl, FormGroup, FormArray
+    ```
+    <!-- 当valid为true时，返回null，当valid为false时，返回的是{mobile: true} -->
+    mobileValidator(control: FormControl): any {
+        var myreq = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+        let valid = myreq.test(control.value);
+        console.log('mobile的校验结果是：', valid);
+        return valid ? null : { mobile: true };
+    }
+   <!-- FormGroup的取值的方法是group.get('pwd') -->
+    equalValidator(group: FormGroup):any {
+    let password: FormControl = group.get('pwd') as FormControl;
+    let passwordAgain: FormControl = group.get('pwdAgain') as FormControl;
+    let valid: boolean = password.value === passwordAgain.value;
+    console.log('密码校验结果：'+valid);
+    return valid ? null : {equal: true};
+    }
+    <!-- 其中的FormControl添加的校验器和FormGroup添加校验器的方法有区别 -->
+    // fb来书写响应式表单
+    this.formModel = fb.group({
+      userName: ['', [Validators.required, Validators.minLength(6)]],
+      phoneNumber: ['', this.mobileValidator],
+      passwordArray: fb.group({
+        pwd: [''],
+        pwdAgain: ['']
+      }, {validator: this.equalValidator})
+    });
+    ```
+    注：FormControl的添加在数组的第二个参数,使用this.mobileValidator,而FormGroup的添加在数组的第二参数,但是这个参数是
+    一个对象**{validator: this.equalValidator}**.
+
+    9. 同样的，你也可以将这些校验器放在一个ts文件中。
+    10. 这个form的valid的valid的引用：this.formModel.valid，只有当所有的验证结果都是true时，form的所有的结果才是true.
+    11. 
+    ```
+    <div [hidden]='!formModel.hasError("required","userName")'>
+      用户名是必填项
+    </div>
+    <!-- required是返回的错误提示消息的key值, hasError需要的填入的第一个参数是key值，而第二个参数是指要验证的字段的名称， 当有错误时，返回为true, 此时取反显示错误信息。 -->
+    <div [hidden]='!formModel.hasError("minlength", "userName")'>
+    第二个参数添加的是要验证的字段名，若是FormGroup字段，则是FormGroup的字段名。
+    ```
+    注： 若果你要检查的字段是嵌套在FormGroup里面的话，第二个参数要传递一个数组，例如：一级的属性是passwordGroup,二级的属性是password, 那么验证的写法是第二个参数是：formModel.hasError('minlength',['passwordGroup', 'password'])
+    ```
+    <!-- 实例的完整的写法是： -->
+    <div [hidden]='!formModel.hasError("minlength", ["passwordArray","pwd"])'>
+      密码的最小的长度是6
+    </div>
+
+    passwordArray: fb.group({
+        pwd: ['', Validators.minLength(6)],
+        pwdAgain: ['']
+      }, {validator: equalValidator})
+    ```
+    12. 如果(错误信息写在校验中)校验器的函数的false的返回值为设置为：
+    ```
+    由：
+    return valid ? null : {equal: true}
+    改为：
+    return valid ? null : {equal:{descriptions: '密码和确认密码不匹配！'}}
+    在页面中获取信息的方法是：
+    <div>{{formModel.getError("equal", 'passwordArray')?.descriptions}}</div>
+    ```
+    13. 异步校验器：FormControl的第三个参数， 返回的不是一个对象， 而是一个流, 
+    在页面中显示表单的状态：{{formModel.status}}.
+    ```
+    export function mobileAsyncValidator(control: FormControl): any {
+        var myreq = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+        let valid = myreq.test(control.value);
+        console.log('mobile的校验结果是：', valid);
+        return Observable.of(valid ? null : { mobile: true }).delay(5000);
+    }
+
+    <!-- 添加到校验的字段中 -->
+     phoneNumber: ['', mobileValidator, mobileAsyncValidator],
+    ```
+    14. 表单的状态字段：touched和untouched(判断这个字段是否获取过焦点), pristine和dirty(如果一个字段的值从来没改变过，pristine：true, 而dirty是false, 而dirty和pristine的意思相反), pending()
+    ```
+    <div [hidden]='formModel.get("userName").valid || formModel.get("userName").untouched'></div>
+    ```
+    ```
+    <!-- 关注的是值有没有改变 -->
+    <div [hidden]='formModel.get("phoneNumber").valid || formModel.get("phoneNumber").pristine'>
+    ```
+    如果有一个字段是touched，表单的字段是touched，只有所有的字段是untouched，表单的字段才是untouched，同样，只有所有的字段都是pristine, 表单的字段才是pristine，而只要有一个字段是dirty，表单的值就是dirty.
+    pending: 当字段是处于异步的校验时，pending的值为true.
+    15. angular可以自动在字段上添加了一些类，根据字段的状态添加了一些类，可以在这些类上添加一些样式。
+    16. 校验模板式表单(只能使用指令来校验)
+    ```
+    @Directive({
+        selector: '[equal]',
+        providers: [{provide: NG_VALIDATORS, useValue: equalValidator, multi: true}]
+    })
+    <!-- multi的作用是：一个provide可以有多个token, 即项目中存在多个相同的provide值，即相同的token. 但是值不相同，即一个token可以有多个值。-->
+    ```
+    不启动浏览器的默认的表单的校验：<form novalidate></form>
+    有一些默认的指令：required, minlength='6'; // 这些是一些angular指令，与浏览器默认的表单的验证不同。
+    ```
+    export function equalModelValidator(group: FormGroup):any {
+        let password: FormControl = group.get('pwd') as FormControl;
+        let passwordAgain: FormControl = group.get('pwdAgain') as FormControl;
+        let valid: boolean;
+        <!-- 判断初始值 -->
+        if (password && passwordAgain) {
+            valid = password.value === passwordAgain.value;
+        }
+        console.log('密码校验结果：'+valid);
+        return valid ? null : {equal: true};
+    }
+    ```
+    其中，在指令中引用该函数：
+    ```
+    @Directive({
+        selector: '[equal]',
+        providers: [{provide: NG_VALIDATORS, useValue: equalModelValidator, multi: true}]
+    })
+    <!-- 其中，provide是固定的, useValue是函数的引入, multi 当有一个固定的provider对应着多个useValue使用 -->
+    ```
+    注： 当需要判断时， 可以通过#my = 'ngForm';模板变量来引用，判断需要通过模板变量来引用判断状态。input的引用使用#my = 'ngModel';<div *ngIf="my.invalid && (my.touched || my.dirty)"></div>
+    注： 模板的变量的状态的变化是异步的，很难控制，对于input的状态的控制，可以使用在input上添加(input)='onMobileInput(myForm)'。
+    ```
+    let mobileValid: boolean = true;
+    onMobileInput(form: NgForm) {
+        if (form) {
+            this.mobileValid = form.form.get('mobile').valid;
+        }
+    }
+    <!-- 然后在变量属性绑定到模板上。 -->
+    <div [hidden]='mobileValid'></div>
+    ```
+    
+   
+
 三, git的实战操作
   1. 配置只适合当前的目录的git配置命令(添加local属性, 只对当前目录有效)：
   ```
@@ -332,7 +494,7 @@ greeting(name: string) {
   推送到远程的dev:#git push origin dev
   ```
   7. 删除一个分支：#git branch -d 分支名， 远端的分支的删除：#git push origin -d 模块名
-  8. 
+  
 
 
 
