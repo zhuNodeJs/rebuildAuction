@@ -469,7 +469,7 @@ greeting(name: string) {
     <!-- 然后在变量属性绑定到模板上。 -->
     <div [hidden]='mobileValid'></div>
     ```
-
+    
    
 
 三, git的实战操作
