@@ -21,7 +21,7 @@ export class ProductComponent implements OnInit {
         .subscribe((value) => {
           this.keyword = value;
         })
-   }
+  }
 
   ngOnInit() {
     this.products = this.productService.getProducts();

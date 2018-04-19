@@ -469,9 +469,6 @@ greeting(name: string) {
     <!-- 然后在变量属性绑定到模板上。 -->
     <div [hidden]='mobileValid'></div>
     ```
-    
-   
-
 三, git的实战操作
   1. 配置只适合当前的目录的git配置命令(添加local属性, 只对当前目录有效)：
   ```
@@ -495,8 +492,108 @@ greeting(name: string) {
   推送到远程的dev:#git push origin dev
   ```
   7. 删除一个分支：#git branch -d 分支名， 远端的分支的删除：#git push origin -d 模块名
-  
+四，Http通讯
+  1. 默认情况下，angular是使用响应式编程来进行http请求。
+  2.    
+  ```
+  import 'rxjs/Rx'; //map方法需要的模块  
+  <!-- 将http的get方法函数获得的流数据使用map的函数转化为json格式数据. --> 
+  private dataSource: Observable<any>;
+  private products: Array<any> = [];
+  constructor(private http: Http) {
+      this.dataSource = this.http.get('/products')
+                            .map((res) => res.json());
+  }
+  ```
+  3. 订阅流(ngOnInit)
+  ```
+  ngOnInit() {
+      this.dataSource.subscribe((data) => this.products = data);
+  }
+  <!-- 程序中数据的请求是由subscribe来触发的，而不是由this.http.get(url)来触发的。get方法只是定义了请求，而由subscribe来触发。 -->
+  ```
+  4. 使用异步管道(|async)来实现获取数据, 可以省略赋值的操作。
+  ```
+  dataSource: Observable<any>;
+  products: Array<any> = [];
+
+  constructor(private http: Http) {
+    this.dataSource = this.http.get('/apa/products')
+                               .map((res) => res.json());
+   }
+
+  ngOnInit() {
+    this.dataSource.subscribe((data) => this.products = data);
+  }
+
+  <!-- 在页面的设置,可以直接自动的触发请求 -->
+  <li *ngFor="let item of dataSource | async">
+    {{ item.title }}
+  </li>
+  ```  
+  5. 添加请求头：
+  ```
+  import { Http, Headers } from '@angular/http'; // 获取请求头Headers;
+  constructor(private http: Http) {
+    let myHeader: Headers = new Headers();
+    myHeader.append('Authorization', 'Basic 123456');
+    this.dataSource = this.http.get('/apa/products', { headers: myHeader })
+                               .map((res) => res.json());
+   }
+  ```
+  6. websocket通讯(服务器和客户端----客户端中使用服务来对服务器进行数据的请求, 然后服务被依赖注入到组件中)
+  websocket开发的步骤：
+  1. 设置server.js即服务器：
+  ```
+  var ws = require('ws').Server; // 创建服务器类
+  var wsService = new ws({port: 8085}); // 配置端口
+  wsService.on('connection',function(websocket) {
+      websocket.send('这个消息是由服务器主动推送的！');
+      websocket.on('message', function(message) {
+          console.log('接收到来自客户端的消息：'+message);
+      })
+  }); // 实时的监控的数据流
+  ```
+  2. 客户端的服务类的创建(websocket.service.ts)：
+  ```
+  ws: WebSocket;
+  // 接收来自服务器的消息，并返回Observable流给客户端组件：
+  createObservableSocket(url: string): Observable<any> {
+      this.ws = new WebSocket(url); // 此时的与服务器进行了连接
+      return new Observable(
+          observer => {
+              this.ws.onmessage = (event) => observer.next(event.data);
+              this.ws.onerror = (event) => observer.error(event);
+              this.ws.onclose = (event) => observer.complete();
+          }
+      )
+  }
+
+   <!--客户端发送消息到服务器端  -->
+   sendMessage(message: string) {
+       this.ws.send(message);
+   }
+   3. 组件中依赖服务注入实现客户组件中获取数据：
+   constructor(private wsService: WebsocketService) {
+       // 服务的注入
+   }
+   ngOnInit() {
+       // 订阅了服务器发送的数据流并打印在控制台上
+       this.wsService.createObservableSocket('ws://localhost:8085')
+          .subscribe(
+              data => console.log(data),
+              err => console.log(err),
+              () => console.log('流已经结束了')
+          )
+   }
+
+   <!-- 客户端发送数据, 在页面中通过按钮调用触发 -->
+   sendMessageToServer() {
+       this.wsService.sendMessage('Hello from client');
+   }
+
+  ```
+    
 
 
-
-
+五, 

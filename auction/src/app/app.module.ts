@@ -1,6 +1,7 @@
 import { ProductService } from './shared/product.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpModule } from '@angular/http';
 import { Routes, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -34,6 +35,7 @@ const routeConfig: Routes = [
     FilterPipe
   ],
   imports: [
+    HttpModule,
     BrowserModule,
     RouterModule.forRoot(routeConfig),
     ReactiveFormsModule,
