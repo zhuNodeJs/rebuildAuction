@@ -1,0 +1,99 @@
+var express = require('express');
+var app = express();
+
+var Server = require('ws').Server;
+
+// 解决跨域
+// app.all('*', function(req, res, next) {
+//     res.header("Access-Control-Allow-Origin", "*");
+//     res.header("Access-Control-Allow-Headers", "X-Requested-With");
+//     res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+//     res.header("X-Powered-By",' 3.2.1');
+//     res.header("Content-Type", "application/json;charset=utf-8");
+//     next();
+// });
+
+function Product(id, title, price, rating, desc, categories) {
+    this.id = id;
+    this.title = title;
+    this.price = price;
+    this.rating = rating;
+    this.desc = desc;
+    this.categories = categories;
+}
+
+function Comment(id, productId, timestamp, user, rating, content) {
+    this.id = id;
+    this.productId = productId;
+    this.timestamp = timestamp;
+    this.user = user;
+    this.rating = rating;
+    this.content = content;
+}
+
+var comments = [
+    new Comment(1, 1, '2017-02-02 22:22:22', '张三', 3, '东西不错'),
+    new Comment(2, 1, '2017-03-03 23:22:22', '李四', 4, '东西是不错'),
+    new Comment(3, 1, '2017-04-04 21:22:22', '王五', 2, '东西挺不错'),
+    new Comment(4, 2, '2017-05-05 20:22:22', '赵六', 4, '东西还不错')
+  ];
+
+var products = [
+    new Product(1, '第一个商品', 1.99, 3.5, '这是第一个商品，排列为第一个', ['电子产品', '硬件设备']),
+    new Product(2, '第二个商品', 2.99, 2.5, '这是第二个商品，排列为第一个', ['食品', '硬件设备']),
+    new Product(3, '第三个商品', 3.99, 1.5, '这是第三个商品，排列为第一个', [ '硬件设备']),
+    new Product(4, '第四个商品', 4.99, 3.5, '这是第四个商品，排列为第一个', ['电子产品', '硬件设备']),
+    new Product(5, '第五个商品', 5.99, 4.5, '这是第五个商品，排列为第一个', ['生活', '硬件设备']),
+    new Product(6, '第六个商品', 6.99, 3.5, '这是第个商品，排列为第一个', [ '图书'])
+    ];
+
+app.get('/', function(req, res) {
+    res.send('Hello, world!');
+})    
+
+app.get('/apa/products',function(req, res) {
+    var result = products;
+    var params = req.query;
+    res.json(result);
+})
+
+app.get('/apa/product/:id', function(req, res) {
+    res.json(products.filter(function(item) {
+        return item.id == req.params.id;
+    }))
+})
+
+app.get('/apa/product/:id/comments', function(req, res) {
+    res.json(comments.filter(function(comment) {
+        return comment.productId == req.params.id;
+    }))
+})
+
+
+var server = app.listen(8889,'localhost', function() {
+    var host = server.address().address;
+    var port = server.address().port;
+
+    console.log('Example app listening at http://%s:%s', host, port);
+})
+
+
+var wsServer = new Server({
+    port: 8085
+})
+
+wsServer.on('connection', function(websocket){
+    websocket.send('这个消息是由服务器主动推送的！');
+    websocket.on('message', function(message) {
+        console.log('接收到来自客户端的消息：'+message);
+    })
+})
+
+// 实现消息的向客户端的定时的推送
+setInterval(function() {
+    if (wsServer.clients) {
+        wsServer.clients.forEach(function(client) {
+            client.send('这是定时的消息推送的');
+        })
+    }
+}, 2000);
