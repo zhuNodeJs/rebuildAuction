@@ -18,7 +18,7 @@ export class SearchComponent implements OnInit {
       this.formModel = fb.group({
         title: ['', Validators.minLength(3)],
         price: [null, positiveValidator],
-        category: ['-1']  
+        category: ['-1']
       })
    }
 
@@ -30,7 +30,8 @@ export class SearchComponent implements OnInit {
     const valid: boolean = this.formModel.valid;
     if (valid) {
       console.log(this.formModel.value);
-    }    
+      this.productService.searchEvent.emit(this.formModel.value); // 事件的发射
+    }
   }
 
 }

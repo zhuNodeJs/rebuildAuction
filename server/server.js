@@ -51,7 +51,28 @@ app.get('/', function(req, res) {
 
 app.get('/apa/products',function(req, res) {
     var result = products;
-    var params = req.query;
+    var params = req.query;    
+    console.log(params);
+    if (params.title) {
+        result = result.filter(function(p) {
+            return p.title.indexOf(params.title) != -1;
+        })
+    }    
+
+    if (params.price && result.length > 0) {
+        result = result.filter(function(p) {
+            return p.price <= params.price;
+        })
+    }
+    
+    if (params.category && params.category != '-1' && result.length > 0) {        
+        result = result.filter(function(p) {
+            console.log(p.categories);
+            console.log(params.category);
+            return p.categories.indexOf(params.category) != -1;
+        }) 
+    }    
+
     res.json(result);
 })
 

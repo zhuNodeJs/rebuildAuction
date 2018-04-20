@@ -593,7 +593,50 @@ greeting(name: string) {
    }
 
   ```
-    
+五, 与服务器实战项目关注点
+  1. 由于是从服务器中获取数据，所以是异步的，所以在页面上获取数据进行渲染时：
+  ```
+  <!-- 添加?的作用是： 当数据还没有返回时，不报错，不渲染显示，*ngFor指令则不用这么做，它自带这个判断空值的功能，所以不用报错.-->
+  <div>
+    <h4 class="pull-right">{{product?.price}}元</h4>
+    <h4>{{ product?.title }}</h4>
+    <p>{{ product?.desc }}</p>
+  </div>
+  ```
+  2. fliter函数返回的数组的是数组格式，而find函数返回的格式是数组中的一个数据参数的格式。
+  3. 可以直接在页面上使用async来是实现赋值。
+  4. 中间人模式的限制是必须有共同的父组件，在实战中搜索组件和商品列表组件没有共同的父组件(搜索组件的父组件是app, 而商品列表的组件的父组件是Home组件，所以两者没有共同的组件), 所以他们只能使用服务来实现传递。
+  5. 父子组件的数据传递使用属性传值，而兄弟组件的数据传递是使用中间人模式。而两者之间没有直接关系则是用服务(两者共同的依赖)来联系。
+  6.  通过服务实现非父子组件，也非兄弟组件的两个组件的数据的传递：
+  ```
+  <!-- 事件的发送和接收 -->
+  searchEvent: EventEmitter<ProductSearchParams> = new EventEmitter();
 
+  <!-- http的请求数据的定义 -->
+  search(params: ProductSearchParams): Observable<Product[]> {
+    return this.http.get('/apa/products', {search: this.encodeParams(params)}).map((res) => res.json());
+  }
+  <!-- 对传递的参数进行组合成http的传递的参数 -->
+  private encodeParams(params: ProductSearchParams) {
+    let result: URLSearchParams;
+    result = Object.keys(params)
+             .filter(key => params[key])
+             .reduce((sum:URLSearchParams, key:string) => {
+                sum.append(key, params[key]);
+                return sum;
+             }, new URLSearchParams());
+    return result;
+  }
 
-五, 
+  <!-- 数据对象的格式 -->
+  export class ProductSearchParams {
+  constructor(
+    public title: string,
+    public price: number,
+    public category: string
+    ){
+
+    }
+ }
+  ```
+   六：
