@@ -24,8 +24,10 @@ export class ProductDetailComponent implements OnInit {
     // this.product = this.productService.getProduct(productId);
     // this.comments = this.productService.getCommentForProduct(productId);
     this.productService.getProduct(productId).subscribe(data => {
-
+        this.product = data;
     })
+    this.productService.getCommentForProduct(productId)
+                       .subscribe(data => this.comments = data)
   }
 
   addComment() {
