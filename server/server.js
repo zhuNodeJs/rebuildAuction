@@ -52,7 +52,6 @@ app.get('/', function(req, res) {
 app.get('/apa/products',function(req, res) {
     var result = products;
     var params = req.query;    
-    console.log(params);
     if (params.title) {
         result = result.filter(function(p) {
             return p.title.indexOf(params.title) != -1;
