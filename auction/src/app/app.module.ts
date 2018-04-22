@@ -15,6 +15,7 @@ import { StarsComponent } from './stars/stars.component';
 import { ProductDetailComponent } from './product-detail/product-detail.component';
 import { HomeComponent } from './home/home.component';
 import { FilterPipe } from './pipe/filter.pipe';
+import { WebsocketService } from './shared/websocket.service';
 
 const routeConfig: Routes = [
   { path: '', component: HomeComponent},
@@ -41,7 +42,7 @@ const routeConfig: Routes = [
     ReactiveFormsModule,
     FormsModule
   ],
-  providers: [ProductService],
+  providers: [ProductService, WebsocketService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

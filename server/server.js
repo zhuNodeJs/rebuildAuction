@@ -1,6 +1,8 @@
 var express = require('express');
 var app = express();
 
+var Server = require('ws').Server;
+
 // 解决跨域
 // app.all('*', function(req, res, next) {
 //     res.header("Access-Control-Allow-Origin", "*");
@@ -94,6 +96,10 @@ var server = app.listen(8888,'localhost', function() {
 
     console.log('Example app listening at http://%s:%s', host, port);
 })
+
+
+
+
 
 
 

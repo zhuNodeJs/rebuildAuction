@@ -1,3 +1,4 @@
+import { WebsocketService } from './../shared/websocket.service';
 import { ProductService, Product, Comment } from './../shared/product.service';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -9,13 +10,17 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class ProductDetailComponent implements OnInit {
 
-  private product: Product;
-  private comments: Comment[];
+  public product: Product;
+  public comments: Comment[];
 
-  private newRating: number = 5;
-  private newComment: string = '';
+  public newRating: number = 5;
+  public newComment: string = '';
 
-  private isCommentHidden: boolean = true;
+  public isCommentHidden: boolean = true;
+
+  // 关注参数
+  // public isWatched:boolean = false;
+  // public currentBid: number;
 
   constructor(private productService: ProductService, private routeInfo: ActivatedRoute) { }
 
@@ -23,6 +28,7 @@ export class ProductDetailComponent implements OnInit {
     const productId: number = this.routeInfo.snapshot.params['id'];
     this.productService.getProduct(productId).subscribe(data => {
         this.product = data[0];
+        // this.currentBid = this.product.price;
     })
     this.productService.getCommentForProduct(productId)
                        .subscribe(data => this.comments = data)
@@ -39,5 +45,12 @@ export class ProductDetailComponent implements OnInit {
     this.newRating = 5;
     this.isCommentHidden = true;
   }
+
+  // watchProduct() {
+  //   this.isWatched = !this.isWatched;
+
+  //   this.wsService.createObservableSocket('ws://localhost:8085', this.product.id)
+  //       .subscribe();
+  // }
 
 }
