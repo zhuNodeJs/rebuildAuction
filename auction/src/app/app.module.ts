@@ -16,6 +16,7 @@ import { ProductDetailComponent } from './product-detail/product-detail.componen
 import { HomeComponent } from './home/home.component';
 import { FilterPipe } from './pipe/filter.pipe';
 import { WebsocketService } from './shared/websocket.service';
+import { LocationStrategy, HashLocationStrategy } from '@angular/common';
 
 const routeConfig: Routes = [
   { path: '', component: HomeComponent},
@@ -42,7 +43,8 @@ const routeConfig: Routes = [
     ReactiveFormsModule,
     FormsModule
   ],
-  providers: [ProductService, WebsocketService],
+  providers: [ProductService, WebsocketService,
+   {provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
