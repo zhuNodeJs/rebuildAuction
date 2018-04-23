@@ -1,0 +1,22 @@
+<!-- 输入框的过滤操作 -->
+<!-- <div class="row">
+  <div class="col-sm-12">
+    <div class="form-group">
+      <input type="text" class="form-control" placeholder="请输入商品名称" [formControl]='titleFilter'>
+    </div>
+  </div>
+</div> -->
+<!-- <div class="col-md-4 col-sm-4 col-lg-4" *ngFor="let item of products | filter:'title':keyword"> -->
+<div class="col-md-4 col-sm-4 col-lg-4" *ngFor="let item of products">
+  <div class="thumbnail">
+    <img src="http://placehold.it/320x150" alt="">
+    <div class="caption">
+      <h4 class="pull-right">{{item.price}}</h4>
+      <h4><a href="#" [routerLink]="['/product', item.id]">{{item.title}}</a></h4>
+      <p>{{item.desc}}</p>
+    </div>
+    <div>
+      <app-stars [rating]='item.rating'></app-stars>
+    </div>
+  </div>
+</div>
