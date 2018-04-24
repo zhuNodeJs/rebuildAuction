@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-const Server = require('ws').Server;
+const Server = require('ws').Server; // 后端创建ws服务器
 
 class Product {
   constructor(
@@ -100,11 +100,13 @@ const subscriptions = new Map<any, number[]>();
 const wsServer = new Server({port: 8090});
 
 wsServer.on('connection', (websocket) => {
-//   websocket.send('这个消息是服务器主动推送的!');
   websocket.on('message', (message) => {
+      // 当客户端有信息传递时，即服务器端接收，由于这个客户端传递个是JSON.stringify({productId:id});所以在接到数据时，使用
+      // JSON.parse(message);   
       let messageObj = JSON.parse(message);
+      // key值是连接到服务端的客户端，当subscripitons.get(websocket)的值为undefined，则赋值为空数组;   
       let productIds = subscriptions.get(websocket) || []; 
-      // 将新的商品的Id放到值的数组中;
+      // 将新的商品的Id放到值的数组中;将已有的和新建的id组合在一起;
       subscriptions.set(websocket, [...productIds, messageObj.productId]); // [...productIds]: 扩展运算符  
   })  
 })
@@ -113,6 +115,7 @@ wsServer.on('connection', (websocket) => {
 const currentBids = new Map<number, number>();
 
 // 实现消息向客户端的定时的推送
+// 模拟数据的更新
 setInterval(function() {
     // 随机生成每个商品的最新的商品的价格
     products.forEach((product) => {
@@ -123,11 +126,14 @@ setInterval(function() {
     // 循环每一个客户端, 推送每一个客户端关注的商品的价格
     subscriptions.forEach((productIds: number[], ws) => {
         // 返回的数据的格式是：[{productId:xxx,bid: xxx},{},{}],对应是每个被关注的商品的最新的报价
-       if (ws.readyState === 1) {
+       // *** 防止页面刷新报错;
+        if (ws.readyState === 1) {
+        //    通过映射将pid组成{productId: pid, bid: currentBid.get(pid)}
             let newBids = productIds.map(pid => ({
                 productId: pid,
                 bid: currentBids.get(pid)
             }));
+            // 发送的数据
             ws.send(JSON.stringify(newBids));
         } else {
             subscriptions.delete(ws); // 删除已经关闭的客户端

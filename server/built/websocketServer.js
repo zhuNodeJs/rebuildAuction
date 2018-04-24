@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-var Server = require('ws').Server;
+var Server = require('ws').Server; // 后端创建ws服务器
 var Product = /** @class */ (function () {
     function Product(id, title, price, rating, desc, categories) {
         this.id = id;
@@ -81,7 +81,6 @@ var server = app.listen(8889, 'localhost', function () {
 var subscriptions = new Map();
 var wsServer = new Server({ port: 8090 });
 wsServer.on('connection', function (websocket) {
-    //   websocket.send('这个消息是服务器主动推送的!');
     websocket.on('message', function (message) {
         var messageObj = JSON.parse(message);
         var productIds = subscriptions.get(websocket) || [];
